@@ -1,0 +1,260 @@
+---
+title: "Problem Set 3"
+author: "Ryan Ochoa"
+date: "3/26/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE}
+setwd("C:\\Users\\rocho\\OneDrive\\Documents\\R\\Policy Analysis\\Problem Sets\\PS3")
+library(stargazer)
+library(effects)
+library(ggplot2)
+library(tinytex)
+```
+
+
+
+## 1.1 Check out variable "gini", which measures state level pre-tax and pre-transfer income inequality. Present a visual that ranks the fifty American states based on the level of income inequality.
+
+
+*R code*:
+```{r, echo=TRUE}
+ineq.df <- read.csv("inequality.csv", header=TRUE)
+ineq.df$college <- ineq.df$college*100
+```
+
+It is important to note that I redefine the values in the *college* column by multiplying them by 100. This will redefine the variable as the *percentage* of state population with at least a college level education.
+
+
+*R code*:
+```{r, echo=TRUE}
+summary(ineq.df$gini)
+```
+
+
+
+
+The variable of interest in this report is the *gini* coefficient, which is the U.S. Census Bureau's measure of pre-tax and pre-transfer income inequality, estimated based on gross household income. The *gini* coefficient ranges from "0" to "1", with a value of "0" indicating perfect equality (where there is a proportional distribution of income) and a value of "1" indicating perfect inequality (where one household has all the income).
+
+From the above summary statistics, the average *gini* coefficient is **0.4649**, indicating that gross household income in most states is more on the *proportionate* side of the inequality spectrum. At 0.4080, Alaska had the lowest gini coefficient of income inequality, while New York had the highest gini coefficient at 0.5130. The figure below provides a ranked gini coefficient measure of all 50 states:
+
+
+*R code*:
+```{r fig.height=7, fig.width=8.5, echo=TRUE}
+attach(ineq.df)
+ggplot(ineq.df, aes(x=gini, y=reorder(state, gini)))+
+ geom_segment(aes(yend=state), xend=0, color="gray", linetype="solid", lwd=0.01)+
+ geom_point(color="blue")+theme_bw()+
+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+ axis.text.x = element_text(size=rel(1), vjust=-1),
+ axis.text.y = element_text(size=rel(1)), axis.ticks.length=unit(.2, "cm"),
+ axis.title = element_text(size=14))+
+ labs(x="Coefficient Measure of Income Inequality", y="State")+
+ geom_vline(xintercept=mean(gini), col="red")+
+ ggtitle("U.S. Census Bureau's gini Coefficient Measure Income Inequality in 2016")
+```
+
+
+
+
+## 1.2 Discuss substantively what you observe regarding income inequality across the fifty states in 2016.
+
+
+Every state in the United States has some degree of income inequality, and the degree of income inequality does not appear to be isolated to any one specific region in the U.S. The below summary statistics provide mean measures of the *gini* coefficient under different set parameters, such as states with a democrat governor, states with higher rates of unemployment, state population with college education, and state minimum wage policy. 
+
+
+*R code*:
+```{r, echo=TRUE}
+summary(ineq.df$gini[which(ineq.df$demgov==0)]) #Republican Governor
+summary(ineq.df$gini[which(ineq.df$demgov==1)]) #Democrat Governor
+```
+
+From the summary statistics above, it appears to be the case that states with democrat governors is associated with an increased level of income inequality. When the governor of a state is a republican, the average gini coefficient is 0.4635, **.0014 units less** than the mean across all 50 states. When the governor of a state is a democrat the average gini coefficient is 0.4677, **.0028 units more** than the mean across all 50 states.
+
+
+*R code*:
+```{r, echo=TRUE}
+summary(ineq.df$unemp) #unemp=4.636
+summary(ineq.df$gini[which(ineq.df$unemp>=4.636)]) 
+```
+
+From the summary statistics above, it appears to be the case that states with rates of unemployment higher than the national mean (4.636) are associated with an increased level of income inequality. When the unemployment rate of a state is above the mean, the mean gini coefficient becomes 0.4738, **.0089 units more** than the mean across all 50 states. 
+
+
+*R code*:
+```{r, echo=TRUE}
+summary(ineq.df$college) #college=29.01
+summary(ineq.df$gini[which(ineq.df$college>=29.01)])
+```
+
+From the summary statistics above, it appears to be the case that states with a college educated population above the national mean (29.01) is associated with an a slightly decreased level of income inequality. When the percentage of a state's college educated population is above the mean, the average gini coefficient is 0.4643, **.0006 units less** than the mean across all 50 states. 
+
+
+*R code*:
+```{r, echo=TRUE}
+summary(ineq.df$minimum) #minimumwage=8.514
+summary(ineq.df$gini[which(ineq.df$college>=8.514)])
+```
+
+From the summary statistics above, it appears to be the case that states with minimum wage policies that are higher than the national mean (8.514) experience no change in the level of income inequality. When the unemployment rate of a state is above the mean, the mean gini coefficient remains 0.4649, suggesting that minimum wage policy is not a contributor to income inequality. 
+
+
+## 2.1 Suppose that a policy analyst wants to test the following two hypotheses:
+
+
+**•	H1: A state that has high minimum wage is expected to have a lower level of income inequality than a state with lower minimum wage.**
+**•	H2: Unemployment rate is positively associated with income inequality.**
+
+**Specify the mathematical equation for one OLS regression model that can be used to test these two hypothesis. Spell out your model equation based on the style of equation (1). Make sure that you include a few reasonable control variables in the model specification. See equation (1) as an example for how you can specify an OLS regression model mathematically: gini_i=α+β_i X_1+β_i X_2...+μ_i**
+
+
+**H1**: *gini*_i=α+(β_1i)*minimumwage*+(β_2i)*college*+(β_3i)*demlegis*+μ_i
+
+
+*R code*:
+```{r, echo=TRUE}
+#gini mean across all 50 states=0.4649
+summary(ineq.df$minimumwage)#mean minimum wage=8.514
+summary(ineq.df$gini[which(ineq.df$minimumwage>8.514)])
+```
+
+
+From the above summary statistics, the mean minimum wage across all 50 states is 8.514 dollars/hour.  Using this parameter, we can see that for all states with a minimum wage greater than 8.514 dollars/hour, the mean gini coefficient falls to 0.4639, an average **decrease** of .001 percentage points.  This may suggest that higher minimum wages could be responsible for decreases in the gini coefficient, thus lower income inequality. 
+
+To test this hypothesis, we will use the following OLS regression equation: *gini*_i=α+(β_1i)*minimumwage*+(β_2i)*college*+(β_3i)*demlegis*+μ_i
+
+
+**H2**: *gini*_i=α+(β_i)*unemp*+(β_2i)*college*+(β_3i)*demlegis*+μ_i
+
+*R code*:
+```{r, echo=TRUE}
+#gini mean across all 50 states=0.4649
+summary(ineq.df$unemp)#mean enemp=.4636 
+summary(ineq.df$gini[which(ineq.df$unemp>4.636)])
+```
+
+
+From the above summary statistics, the mean unemployment level for all states is 4.8%.  Using this parameter, we can see that for all states with an unemployment rate greater than 4.8%, the mean gini coefficient rises to 0.4724, an average **increase** of .0075 percentage points.  This may suggest that higher unemployment rates are responsible for increases in the gini coefficient, thus higher levels of income inequality. 
+
+To test this hypothesis, we will use the following OLS regression equation: *gini*_i=α+(β_i)*unemp*+(β_2i)*college*+(β_3i)*demlegis*+μ_i
+
+
+## 2.2 Now, use the R function "lm()" to estimate the OLS regression model you have specified. Report the statistical results in one table.
+
+
+*R code*:
+```{r, warning=FALSE, echo=TRUE}
+attach(ineq.df)
+
+reg1 <- lm(gini ~ minimumwage + college + demlegis)
+reg2 <- lm(gini ~ unemp+ college + demlegis)
+
+stargazer(reg1, reg2, type="text", title="Table 1", 
+          dep.var.caption = "Income Inequality Coefficient",
+          dep.var.labels = c("1", "2"))
+```
+
+
+
+## 2.3 Discuss if you find evidence supporting the two hypotheses. Make sure that you discuss what the estimated coefficients and their corresponding t-values mean. 
+
+
+
+From the results of Table 1 above, we can see that only the *unemployment variable* is statistically significant variable, at the 99% level of confidence, between both regressions.  Therefore, we can conclude that there exists some evidence of a correlation between a state's unemployment rate and the *gini coefficient*. Thus, hypothesis two is supported.  
+
+The results of regression (2) can be interpreted as follows:  
+
+•*unemp*; For each percentage point increase in the rate of unemployment, the *gini coefficient* will increase by .009 units, all else equal. This is statistically significant at the 99% level of confidence.  
+•*college*; For each percentage point increase in the proportion of state population with at least a college level education, the *gini coefficient* will increase by .0002 units, all else equal. This value is not statistically significant.  
+•*demlegis*; For each percentage point increase in the state legislative seats controlled by Democrats, the *gini coefficient* will increase by .0001 units, all else equal. This value is not statistically significant.  
+
+## 3.1 Use the "effect" package in R to visualize the effect of minimum wage policy on income inequality. Discuss what do you observe. Are states' minimum wage policies correlate with income inequality? How? 
+
+
+
+```{r, echo=TRUE}
+reg3 <- lm(gini ~ minimumwage)
+plot(effect("minimumwage", reg3))
+```
+
+
+The graph above provides a visual representation of the effect of *minimumwage* and the *gini* coefficient.  From the graph we can see a slight positive correlation between these two variables, suggesting that even a large change in the minimum wage will only produce a small change in the gini coefficient. Given this *inelastic* relation between gini and minimum wage, it appears that the effect of minimum wage on income inequality (gini coefficient) is statistically insignificant.  Additionally, examining the confidence intervals at both the minimum value and maximum value for *minimumwage* and provide us with more information regarding statistical significance:  
+
+At minimumwage=12.00 -> confidence interval approximation [0.4500,0.4850]  
+At minimumwage=8.00 -> confidence interval approximation [0.4575,0.4725]  
+
+These two confidence intervals overlap with each other, thus we can conclude that there exists no significant correlation between state minimum wage policies and income inequality.  
+
+## 3.2 Use the "effect" package in R to visualize the effects of unemployment on income inequality. Discuss if you observe any association between the macro economy and income inequality.
+
+
+
+```{r, echo=TRUE}
+reg4 <- lm(gini ~ unemp)
+plot(effect("unemp", reg4))
+```
+
+
+The graph above provides a visual representation of the effect of *unemp* and the *gini* coefficient.  From this graph we can see a clear, and steeper, positive correlation between these two variables, suggesting that changes in the rate of unemployment will have a significant effect on the gini coefficient. Given this *elastic* relationship between gini and unemployment rate, it appears that the effect of unemployment on income inequality (gini coefficient) is statistically significant.  Additionally, examining the confidence intervals at both the minimum value and maximum value for *unemp* and provide us with more information regarding statistical significance:  
+
+At unemp=7.0 -> confidence interval approximation [0.470,0.500]  
+At unemp=3.0 -> confidence interval approximation [0.440,0.462]  
+
+These two confidence intervals do not overlap with each other, thus we can conclude that there exists a significant correlation between state unemployment rate and income inequality.
+
+
+## 4.1 Assessing how your OLS model perform based on the goodness-of-fit statistics. Discuss, as a policy analyst, if you are concerned with the potential omitted variable bias in the analysis you present.
+
+
+Table 1 above shows the summaries for the two regressions used for hypotheses H1 and H2.  According to this figure, we see that regression (2) model produces an $R^2$  and Adjusted $R^2$ value of .183 and .129, respectively, meaning that only 18.3% of the variance in *gini* variable can be explained by the *unemp* variable. Additionally, the lack of statistical significance of the other two control variables, *college* and *demlegis*, suggest that this model is not a very good fit for the data.
+
+Furthermore, it is highly probable that this model suffers from omitted variable bias, as there exist other important factors that contribute to income inequality.  A few examples may include:
+
+•*Tax System*; differences in the tax code across the states that capture the effects of additional taxation levied on its citizens (i.e., state income tax, sales tax, excise taxes, and other). It can be anticipated that states with higher levels of extracurricular taxes could be correlated to higher levels of income inequality. Perhaps it would be best to capture an effect like this using a **fixed effects** approach.
+•*Medicaid Eligibility Levels*; healthcare and health insurance are important inputs to a productive society. Thus, states with stricter eligibility requirements for Medicaid may be correlated with higher levels of income inequality. Alternatively, a measure for a state's *uninsured* population may be just as appropriate; states with higher rates of uninsured citizens may be correlated with higher levels of income inequality.
+•*Poverty Rate*; poverty rates are an obvious indicator of poor a economic landscape. States' with higher rates of poverty will most likely be correlated with higher levels of income inequality. It is important to note that this variable may introduce a "multicollinearity" issue as higher rates of poverty could be associated with increased levels of welfare participation (i.e., medicaid eligibility).
+•*Illegal Immigrant Population*; illegal immigrants tend to be in poverty.Thus, states with larger illegal immigrant populations may be correlated with higher levels of income inequality.
+
+
+## 4.2 What might be other factors that can cause income inequality and excluded in your analysis (e.g., poverty rates? gender-pay gaps? or else?). Add data for the 50 states for one additional variable that you think might affect income inequality. Reestimate your OLS model with this one additional variable, and report/discuss what you find.
+
+
+As listed above, omitted variables such as state tax systems, state medicaid eligibility, state poverty rates, and state populations of illegal immigrants could all be contributing factors of income inequality but are not present in this data. As it is highly likely that the current model suffers from omitted variable bias, additional variables are included and represented in the table below.
+
+
+```{r, echo=TRUE}
+reg5 <- lm(gini ~ unemp + college + demlegis + femlegis)
+reg6 <- lm(gini ~ unemp + college + demlegis + femlegis + demgov)
+reg7 <- lm(gini ~ unemp + college + demlegis + femlegis + demgov + minimumwage)
+
+stargazer(reg2, reg5, reg6, reg7, type="text", title="Table 2", 
+          dep.var.caption = "Income Inequality Coefficient")
+```
+
+From the table, we can see that *unemp* remains statistically significant when adding the additional controls; however, we now see that *femlegis* shows statistical significance but only at the 90% level of confidence. With the inclusion of *femlegis*, our initial model, regression (1) of Table 2, gets a boost in both $R^2$ and Adjusted $R^2$ values, from 0.183 to 0.247 and from 0.129 to 0.178, respectively. With *femlegis* added, our model can know explain 24.7% of the variance between income inequality and the independent variables.
+
+Moving from regression (2) to regression (3) includes the additional variable, *demgov*, and moving from regression (3) to regression (4) adds the last variable, *minimumwage*. Unsurprisingly, we see the $R^2$ measure increase as the additional variables are included in the model. However, the Adjusted $R^2$ measure does not change with the inclusion of the *demgov* variable in regression (3). Furthermore, in regression (4), the Adjusted $R^2$ measure actually decreases with the addition of the *minimumwage* variable. It is interesting to note that both variables, *demgov* and *minimumwage*, bear no statistical significance, and appear to decrease the *college* effect with their inclusion into the model.
+
+
+```{r, echo=TRUE}
+reg8 <- lm(gini ~ unemp + demlegis + femlegis)
+
+stargazer(reg2, reg5, reg8, type="text", title="Table 3", 
+          dep.var.caption = "Income Inequality Coefficient")
+```
+
+
+
+
+```{r, echo=TRUE}
+model <- update(reg2, .~.+minimumwage+college+femlegis+demlegis+demgov)
+plot(allEffects(model, default.levels=50), ask=FALSE)
+```
+
+
