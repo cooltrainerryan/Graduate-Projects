@@ -1,0 +1,332 @@
+---
+title: "Forecasting 3"
+author: "Ryan Ochoa"
+date: "3/13/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE}
+setwd("C:\\Users\\rocho\\OneDrive\\Documents\\R\\Forecasting\\Homework\\Problem Set 3")
+library(fma)
+library(forecast)
+library(ggplot2)
+library(fpp2)
+library(tseries)
+```
+
+
+
+## (1) Explain the differences among these figures. Do they all indicate the data are white noise? Why are the critical values at different distances from the mean of zero? 
+
+
+The data provide by each of the three graphs shows that all lags are within the confidence interval, thus indicating that each data is white noise.
+
+
+## (2a)	Use the following R code to generate data from an AR(1) model with ϕ1=0.6 and σ2=1. The process starts with y0=0.  Produce a time plot for the series.
+
+
+```{r, echo=FALSE}
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100)
+  y[i] <- 0.6*y[i-1] + e[i]
+
+ts.plot(y)
+```
+
+
+
+
+
+## (2b)	How does the plot change as you change ϕ1 (0.3, 0.6 and 0.9)?
+
+
+
+
+```{r, echo=FALSE}
+#ϕ1=0.3
+y1 <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100)
+  y1[i] <- 0.3*y1[i-1] + e[i]
+
+ts.plot(y1)
+```
+
+
+
+```{r, echo=FALSE}
+#ϕ1=0.9
+y2 <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100)
+  y2[i] <- 0.9*y2[i-1] + e[i]
+
+ts.plot(y2)
+```
+
+
+
+
+
+## (3a)	Plot the data against time and obtain ACF, PACF and Q-statistics.
+
+**-	Does the series appear to be stationary**?
+
+
+```{r, echo=FALSE}
+y2 <- read.csv("Y2_new.csv", header=TRUE)
+yy <- ts(y2)
+plot(yy)
+```
+
+
+From the graph above, we do not see any trend or seasonality. Visually, we can conclude that the data is *stationary*.
+
+
+```{r, echo=FALSE}
+ggtsdisplay(yy,main="")
+```
+
+
+**-	Does the series appear to be a white noise process?  Why or why not?**
+
+```{r, echo=FALSE}
+#Q*test
+Box.test(yy, lag=24, fitdf=0, type="Ljung")
+```
+
+**p-value < 0.05**, therefore the data is not white noise.
+
+
+
+## (3b)	Estimate different ARMA models using various values of p and q from 0 to 5, and identify the best ARMA(p,q) model (use AICc information criteria).Then, provide the estimation result of the best ARMA model.
+
+Using the *auto.arima()* function, R produces a (1,0,1) model.
+
+```{r, echo=FALSE}
+autofit <- auto.arima(yy,seasonal=FALSE)  
+summary(autofit)
+
+```
+
+
+Using all varying values for p and q form 0 to 5, different ARMA models are estimated to identify the best model using a AICc criteria:
+
+*table*
+
+```{r, include=FALSE}
+fit1 <- Arima(yy, order=c(0,0,1), include.mean=FALSE)
+fit2 <- Arima(yy, order=c(0,0,2), include.mean=FALSE)
+fit3 <- Arima(yy, order=c(0,0,3), include.mean=FALSE)
+fit4 <- Arima(yy, order=c(0,0,4), include.mean=FALSE)
+fit5 <- Arima(yy, order=c(0,0,5), include.mean=FALSE)
+fit6 <- Arima(yy, order=c(1,0,1), include.mean=FALSE)
+fit7 <- Arima(yy, order=c(1,0,2), include.mean=FALSE)
+fit8 <- Arima(yy, order=c(1,0,3), include.mean=FALSE)
+fit9 <- Arima(yy, order=c(1,0,4), include.mean=FALSE)
+fit10 <- Arima(yy, order=c(1,0,5), include.mean=FALSE)
+fit11 <- Arima(yy, order=c(2,0,1), include.mean=FALSE)
+fit12 <- Arima(yy, order=c(2,0,2), include.mean=FALSE)
+fit13 <- Arima(yy, order=c(2,0,3), include.mean=FALSE)
+fit14 <- Arima(yy, order=c(2,0,4), include.mean=FALSE)
+fit15 <- Arima(yy, order=c(2,0,5), include.mean=FALSE)
+fit16 <- Arima(yy, order=c(3,0,1), include.mean=FALSE)
+fit17 <- Arima(yy, order=c(3,0,2), include.mean=FALSE)
+fit18 <- Arima(yy, order=c(3,0,3), include.mean=FALSE)
+fit19 <- Arima(yy, order=c(3,0,4), include.mean=FALSE)
+fit20 <- Arima(yy, order=c(3,0,5), include.mean=FALSE)
+fit21 <- Arima(yy, order=c(4,0,1), include.mean=FALSE)
+fit22 <- Arima(yy, order=c(4,0,2), include.mean=FALSE)
+fit23 <- Arima(yy, order=c(4,0,3), include.mean=FALSE)
+fit24 <- Arima(yy, order=c(4,0,4), include.mean=FALSE)
+fit25 <- Arima(yy, order=c(4,0,5), include.mean=FALSE)
+fit26 <- Arima(yy, order=c(5,0,1), include.mean=FALSE)
+fit27 <- Arima(yy, order=c(5,0,2), include.mean=FALSE)
+fit28 <- Arima(yy, order=c(5,0,3), include.mean=FALSE)
+fit29 <- Arima(yy, order=c(5,0,4), include.mean=FALSE)
+fit30 <- Arima(yy, order=c(5,0,5), include.mean=FALSE)
+fit31 <- Arima(yy, order=c(0,0,0), include.mean=FALSE)
+fit32 <- Arima(yy, order=c(1,0,0), include.mean=FALSE)
+fit33 <- Arima(yy, order=c(2,0,0), include.mean=FALSE)
+fit34 <- Arima(yy, order=c(3,0,0), include.mean=FALSE)
+fit35 <- Arima(yy, order=c(4,0,0), include.mean=FALSE)
+fit36 <- Arima(yy, order=c(5,0,0), include.mean=FALSE)
+summary(fit1)
+summary(fit2)
+summary(fit3)
+summary(fit4)
+summary(fit5)
+summary(fit6) #AICc=2835.81
+summary(fit7)
+summary(fit8)
+summary(fit9)
+summary(fit10)
+summary(fit11)
+summary(fit12)
+summary(fit13)
+summary(fit14)
+summary(fit15)
+summary(fit16)
+summary(fit17)
+summary(fit18)
+summary(fit19)
+summary(fit20)
+summary(fit21)
+summary(fit22)
+summary(fit23)
+summary(fit24)
+summary(fit25)
+summary(fit26)
+summary(fit27)
+summary(fit28)
+summary(fit29) #AICc=2833.87
+summary(fit30) #AICc=2831.32
+summary(fit31)
+summary(fit32)
+summary(fit33)
+summary(fit34)
+summary(fit35)
+summary(fit36)
+```
+
+
+
+
+
+
+## (3c)	Provide diagnostic check-ups for the residuals of the model you estimated by examining the ACF, PACF and Q-statistics.  Does the residual series appear to be a white noise process?
+
+
+The following tests will provide diagnostic check-ups for the residuals of the model for the three possible models found in the previous section: (1,0,1), (5,0,4), and (5,0,5).
+
+```{r, echo=FALSE}
+#fit6; (1,0,1)
+ggAcf(residuals(fit6))
+checkresiduals(fit6)
+
+#fit29; (5,0,4)
+ggAcf(residuals(fit29))
+checkresiduals(fit29)
+
+#fit30; (5,0,5)
+ggAcf(residuals(fit30))
+checkresiduals(fit30)
+```
+
+
+For fit6; (1,0,1): p-value=0.1599 > 0.05, FTR the null of white noise.  **Residuals are white noise**.
+
+For fit29; (5,0,4): p-value=0.03561 < 0.05, Reject the null of white noise. Residuals are not white noise.
+
+For fit30: p-value=0.02342 < 0.05, Reject the null of white noise. Residuals are not white noise.
+
+
+
+
+## (3d)	Obtain the out-of-sample forecasts of the next 20 periods using the estimated ARMA model. Plot the data and the forecasts.
+
+20-period forecast using the (1,0,1) model:
+
+```{r, echo=FALSE}
+forecast(fit6, h=20)
+plot(forecast(fit6, h=20))
+```
+
+
+## (4a) Plot the data against time and obtain ACF, PACF and Q-statistics.  Does the series appear to be stationary?  (Note that the series would be non-stationary when the ACFs decay slowly.)
+
+```{r, echo=FALSE}
+us <- read.csv("us.csv", header=TRUE)
+gdp <- us[,"GDP85"]
+gdp.ts <- ts(gdp)
+ts.plot(gdp.ts)
+```
+
+From the above graph, we can visually conclude that the data is *non-stationary*.
+
+```{r, echo=FALSE}
+#confirmation using test for stationarity
+ggtsdisplay(gdp.ts,main="")
+adf.test(gdp.ts, alternative = "stationary") #Reject null of unit root, thus data is non-stationary
+```
+
+p-val = 0.1706 > 0.05; FTR the null hypothesis of "non-stationarity". 
+
+From the ACF graph above, we can see a slow and sluggish geometric decay, providing more evidence that the data is non-stationary.  
+
+
+p-val = 0.1706 > 0.05; FTR the null hypothesis of "non-stationarity". 
+
+Furthermore, by using the Augmented Dickey-Fuller Test, we can confirm that the data is indeed *non-stationary*  
+
+
+## (4b)	You must have concluded that the series appears non-stationary.  To make it stationary, first difference the logged series and call it as GDP_FD: GDP_FD = dlog(GDP85)t = log(GDP85)t - log(GDP85)t-1 
+
+
+
+```{r, echo=FALSE}
+ndiffs(gdp.ts, alpha=0.05, test=c("kpss","adf", "pp"), max.d=2)
+gdp.ts.diff <- diff(log(gdp.ts), differences=1)
+```
+
+
+
+**-	Plot this detrended data against time and obtain ACF, PACF and Q-statistics.**  
+
+
+```{r}
+ggtsdisplay(gdp.ts.diff,main="")
+```
+
+
+**-	Does the series appear to be stationary?**  
+
+
+```{r}
+adf.test(gdp.ts.diff, alternative = "stationary")
+```
+
+From the Augmented Dickey-Fuller Test, the p-value=0.01 < 0.05, thus we 
+
+**-	Does the series appear to be a white noise process?**
+
+
+```{r}
+#white noise?
+Box.test(gdp.ts.diff, lag=24, fitdf=0, type="Ljung") 
+#p-val=0.02704, not white noise
+```
+
+pivalue=0.02704<0.05; thus reject null of white noise, thus the data is not a white noise process
+
+
+## (4c)	Provide the estimation result of the best ARMA model. Then, provide diagnostic check-ups for the residuals of the model you estimated by examining the ACF, PACF and Q-statistics.  Does the residual series appear to be a white noise process?
+
+The residual p-val > 0.05, thus the residuals are white noise.
+
+
+```{r}
+fitty <- auto.arima(gdp.ts.diff,seasonal=FALSE)  
+summary(fitty)
+ggAcf(residuals(fitty))
+checkresiduals(fitty)
+```
+
+
+## (4d)	Obtain the out-of-sample forecasts of the next 10 quarters using the estimated ARMA model. Plot the data and forecasts.
+
+10-period forecast using the (2,0,0) model:
+
+```{r, echo=TRUE}
+forecast(fitty)
+plot(forecast(fitty))
+```
+
+
+
